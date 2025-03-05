@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     OLLAMA_HOST: str = os.getenv("OLLAMA_HOST", "http://localhost:11434")
     OLLAMA_MODEL: str = "llama3.2"
     
+    # RAG settings
+    RAG_NUM_CHUNKS: int = 5  # Number of chunks to retrieve (k)
+    RAG_CHUNK_SIZE: int = 1200  # Size of text chunks when splitting documents
+    RAG_CHUNK_OVERLAP: int = 300  # Overlap between chunks
+    
     # System messages for different contexts
     SYSTEM_MESSAGES: Dict[str, str] = {
         "task_summary": "You are a helpful assistant that summarizes tasks concisely.",

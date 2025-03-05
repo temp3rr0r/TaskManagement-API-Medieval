@@ -148,19 +148,6 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     
     return None
 
-# @app.post("/knowledge/query", response_model=KnowledgeResponse)
-# def query_knowledge_base(query: KnowledgeQuery):
-#     """
-#     Query the knowledge base using RAG with the local PDF file
-#     """
-#     try:
-#         answer = rag_manager.query_knowledge_base(query.question)
-#         return KnowledgeResponse(answer=answer)
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=500,
-#             detail=f"Error processing knowledge query: {str(e)}"
-#         ) 
 
 @app.post("/knowledge/query", response_model=KnowledgeResponse)
 def query_knowledge_base(query: KnowledgeQuery):

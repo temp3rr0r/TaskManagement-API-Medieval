@@ -30,7 +30,7 @@ class RAGManager:
 
             # Split text into chunks
             text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1000,
+                chunk_size=settings.RAG_CHUNK_SIZE,
                 chunk_overlap=200,
                 length_function=len
             )
@@ -57,7 +57,7 @@ class RAGManager:
                     llm=llm,
                     chain_type="stuff",
                     retriever=self.vector_store.as_retriever(
-                        search_kwargs={"k": 3}
+                        search_kwargs={"k": settings.RAG_NUM_CHUNKS}
                     )
                 )
             else:
