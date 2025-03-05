@@ -13,12 +13,15 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/taskmanagement
       - REDIS_URL=redis://redis:6379/0
+      - OLLAMA_HOST=http://host.docker.internal:11434
     volumes:
       - .:/app
     command: >
       sh -c "python init_db.py && 
              uvicorn main:app --host 0.0.0.0 --port 8000 --reload --workers 1 --log-level debug --use-colors --reload-dir /app"
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     develop:
       watch:
         - action: sync
@@ -29,6 +32,8 @@ services:
             - "**/__pycache__"
         - action: rebuild
           path: requirements.txt
+    networks:
+      - app-network
 
   db:
     image: postgres:13
@@ -45,6 +50,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
 
   redis:
     image: redis:6
@@ -52,7 +59,14 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   postgres_data:
-  redis_data: 
+  redis_data:
+  ollama_data: 

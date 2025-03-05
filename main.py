@@ -1,7 +1,9 @@
-from fastapi import FastAPI, HTTPException, Depends, status
-from sqlalchemy.orm import Session
 from typing import List, Optional
 import time
+import os
+
+from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks
+from sqlalchemy.orm import Session
 
 from database import get_db
 from models import Task as TaskModel
@@ -9,6 +11,41 @@ from schemas import Task, TaskCreate, TaskUpdate, TaskSummary
 from cache import get_redis_client, set_cache, get_cache, invalidate_cache
 
 app = FastAPI(title="Task Management API")
+
+import ollama
+
+
+def generate_task_summary(task_description: str) -> str:
+    """
+    Generate a summary of a task using Ollama's LLM
+    """
+    try:
+        # Configure Ollama client with the correct host
+        ollama_host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+
+        ollama.host = ollama_host
+        
+        print(f"------------- task_description: {task_description}")
+        response = ollama.chat(
+            model="llama3.2",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant that summarizes tasks concisely."
+                },
+                {
+                    "role": "user",
+                    "content": f"Please summarize the following task description in a few sentences: {task_description}"
+                }
+            ]
+        )
+
+        print(f"------------- response: {response}")
+        return response['message']['content']
+    except Exception as e:
+        print(f"Error generating task summary: {e}")
+        return "Unable to connect to Ollama service. Please try again later."
+
 
 @app.post("/tasks", response_model=Task, status_code=status.HTTP_201_CREATED)
 def create_task(task: TaskCreate, db: Session = Depends(get_db)):
@@ -65,12 +102,10 @@ def get_task_summary(task_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Task not found")
         
     # Get summary of the task
-    print(f"db_task: {db_task}")
-    print(f"db_task.createdAt: {db_task.createdAt}")
     task_information = f"Task ID: {db_task.id}. Title: {db_task.title}. Description: {db_task.description}. Status: {db_task.status}. Created at {db_task.createdAt} and updated at {db_task.updatedAt}."
-    task_summary = "No summary."
+    str_task_summary = generate_task_summary(task_description=task_information)
     
-    task_summary = TaskSummary(task_information=task_information, task_summary=task_summary)
+    task_summary = TaskSummary(task_information=task_information, task_summary=str_task_summary)
     
     return task_summary
 
