@@ -10,6 +10,11 @@ class TaskCreate(TaskBase):
     """Pydantic model for creating a task"""
     pass
 
+class TaskSummary(BaseModel):
+    """Pydantic model for task summary"""
+    task_information: str = Field(..., description="Task information")
+    task_summary: str = Field(..., description="Task summary")
+
 class TaskUpdate(BaseModel):
     """Pydantic model for updating a task"""
     title: Optional[str] = Field(None, min_length=1, description="Task title")

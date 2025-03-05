@@ -17,7 +17,18 @@ services:
       - .:/app
     command: >
       sh -c "python init_db.py && 
-             uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+             uvicorn main:app --host 0.0.0.0 --port 8000 --reload --workers 1 --log-level debug --use-colors --reload-dir /app"
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - "**/*.pyc"
+            - "**/__pycache__"
+        - action: rebuild
+          path: requirements.txt
 
   db:
     image: postgres:13

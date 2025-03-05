@@ -5,7 +5,7 @@ import time
 
 from database import get_db
 from models import Task as TaskModel
-from schemas import Task, TaskCreate, TaskUpdate
+from schemas import Task, TaskCreate, TaskUpdate, TaskSummary
 from cache import get_redis_client, set_cache, get_cache, invalidate_cache
 
 app = FastAPI(title="Task Management API")
@@ -48,6 +48,32 @@ def get_task(task_id: int, db: Session = Depends(get_db)):
     set_cache(redis_client, f"task:{task_id}", db_task)
     
     return db_task
+
+@app.get("/tasks/{task_id}/summary", response_model=TaskSummary)
+def get_task_summary(task_id: int, db: Session = Depends(get_db)):
+    """Retrieve a specific task by ID with Redis caching. Get a summary of the task."""
+    # Try to get task from cache
+    redis_client = get_redis_client()
+    cached_task = get_cache(redis_client, f"task:{task_id}")
+    
+    if cached_task:
+        return cached_task
+    
+    # If not in cache, get from database
+    db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+    if db_task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+        
+    # Get summary of the task
+    print(f"db_task: {db_task}")
+    print(f"db_task.createdAt: {db_task.createdAt}")
+    task_information = f"Task ID: {db_task.id}. Title: {db_task.title}. Description: {db_task.description}. Status: {db_task.status}. Created at {db_task.createdAt} and updated at {db_task.updatedAt}."
+    task_summary = "No summary."
+    
+    task_summary = TaskSummary(task_information=task_information, task_summary=task_summary)
+    
+    return task_summary
+
 
 @app.put("/tasks/{task_id}", response_model=Task)
 def update_task(task_id: int, task: TaskUpdate, db: Session = Depends(get_db)):
