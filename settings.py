@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     RAG_NUM_CHUNKS: int = 5  # Number of chunks to retrieve (k)
     RAG_CHUNK_SIZE: int = 1200  # Size of text chunks when splitting documents
     RAG_CHUNK_OVERLAP: int = 300  # Overlap between chunks
+
+    # PDF settings
+    PDF_PATH: str = os.getenv("PDF_PATH", "/app/data/knowledge_base.pdf")
     
     # System messages for different contexts
     SYSTEM_MESSAGES: Dict[str, str] = {

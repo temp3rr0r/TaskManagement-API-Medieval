@@ -9,7 +9,7 @@ from langchain_community.llms import Ollama
 from langchain_core.documents import Document
 
 # Path to the PDF file in the container
-PDF_PATH = "/app/data/knowledge_base.pdf"
+PDF_PATH = settings.PDF_PATH
 
 class RAGManager:
     def __init__(self):
