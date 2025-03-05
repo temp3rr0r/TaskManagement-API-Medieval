@@ -1,12 +1,13 @@
 # Task Management API
 
-A RESTful API for managing tasks built with FastAPI, PostgreSQL, and Redis.
+A RESTful API for managing tasks built with FastAPI, PostgreSQL, and Redis, with RAG capabilities using local PDF knowledge base.
 
 ## Features
 
 - Create, read, update, and delete tasks
 - Task properties include title, description, status, creation time, and update time
 - Redis caching for improved performance
+- RAG (Retrieval Augmented Generation) using local PDF knowledge base
 - Containerized with Docker and Docker Compose
 
 ## API Endpoints
@@ -16,18 +17,21 @@ A RESTful API for managing tasks built with FastAPI, PostgreSQL, and Redis.
 - `GET /tasks/{id}` - Retrieve a specific task by ID
 - `PUT /tasks/{id}` - Update an existing task
 - `DELETE /tasks/{id}` - Delete a task
+- `POST /knowledge/query` - Query the knowledge base using RAG
 
 ## Running the Application
 
 ### Prerequisites
 
 - Docker and Docker Compose installed on your system
+- Ollama running locally with llama2 model installed
 
 ### Steps to Run
 
 1. Clone this repository
 2. Navigate to the project directory
-3. Run the following command to start the application:
+3. Place your knowledge base PDF file in the `data` directory as `knowledge_base.pdf`
+4. Run the following command to start the application:
 
 ```bash
 docker-compose up -d
@@ -37,6 +41,17 @@ docker-compose up -d
 5. Access the API documentation at http://localhost:8000/docs
 
 ## API Usage Examples
+
+### Query Knowledge Base
+
+```bash
+curl -X 'POST' \
+  'http://localhost:8000/knowledge/query' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "question": "What are the best practices for task management?"
+}'
+```
 
 ### Create a Task
 

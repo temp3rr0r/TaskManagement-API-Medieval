@@ -1,37 +1,31 @@
 from typing import List, Optional
 import time
 import os
-
 from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks
 from sqlalchemy.orm import Session
-
 from database import get_db
 from models import Task as TaskModel
-from schemas import Task, TaskCreate, TaskUpdate, TaskSummary
+from schemas import Task, TaskCreate, TaskUpdate, TaskSummary, KnowledgeQuery, KnowledgeResponse
 from cache import get_redis_client, set_cache, get_cache, invalidate_cache
+import ollama
+from rag import rag_manager
+from settings import settings
 
 app = FastAPI(title="Task Management API")
-
-import ollama
-
 
 def generate_task_summary(task_description: str) -> str:
     """
     Generate a summary of a task using Ollama's LLM
     """
     try:
-        # Configure Ollama client with the correct host
-        ollama_host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-
-        ollama.host = ollama_host
+        ollama.host = settings.OLLAMA_HOST
         
-        print(f"------------- task_description: {task_description}")
         response = ollama.chat(
-            model="llama3.2",
+            model=settings.OLLAMA_MODEL,
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a helpful assistant that summarizes tasks concisely."
+                    "content": settings.SYSTEM_MESSAGES["task_summary"]
                 },
                 {
                     "role": "user",
@@ -40,7 +34,6 @@ def generate_task_summary(task_description: str) -> str:
             ]
         )
 
-        print(f"------------- response: {response}")
         return response['message']['content']
     except Exception as e:
         print(f"Error generating task summary: {e}")
@@ -123,8 +116,8 @@ def update_task(task_id: int, task: TaskUpdate, db: Session = Depends(get_db)):
     if task.description is not None:
         db_task.description = task.description
     if task.status is not None:
-        if task.status not in ["Pending", "In Progress", "Complete"]:
-            raise HTTPException(status_code=400, detail="Invalid status value")
+        if task.status not in settings.VALID_TASK_STATUSES:
+            raise HTTPException(status_code=400, detail=f"Invalid status value. Must be one of: {', '.join(settings.VALID_TASK_STATUSES)}")
         db_task.status = task.status
     
     # Update the updatedAt timestamp
@@ -153,4 +146,62 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     redis_client = get_redis_client()
     invalidate_cache(redis_client, f"task:{task_id}")
     
-    return None 
+    return None
+
+# @app.post("/knowledge/query", response_model=KnowledgeResponse)
+# def query_knowledge_base(query: KnowledgeQuery):
+#     """
+#     Query the knowledge base using RAG with the local PDF file
+#     """
+#     try:
+#         answer = rag_manager.query_knowledge_base(query.question)
+#         return KnowledgeResponse(answer=answer)
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500,
+#             detail=f"Error processing knowledge query: {str(e)}"
+#         ) 
+
+@app.post("/knowledge/query", response_model=KnowledgeResponse)
+def query_knowledge_base(query: KnowledgeQuery):
+    """
+    Query the knowledge base using RAG with the local PDF file
+    """
+    try:
+        answer = rag_manager.query_knowledge_base(query.question)
+        return KnowledgeResponse(answer=answer)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing knowledge query: {str(e)}"
+        ) 
+    
+@app.post("/query", response_model=KnowledgeResponse)
+def query(query: KnowledgeQuery):
+    """
+    Query the knowledge base using RAG with the local PDF file
+    """
+    try:
+        ollama.host = settings.OLLAMA_HOST
+        
+        response = ollama.chat(
+            model=settings.OLLAMA_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": settings.SYSTEM_MESSAGES["knowledge_base"]
+                },
+                {
+                    "role": "user",
+                    "content": f"Please answer the following question: {query.question}"
+                }
+            ]
+        )
+
+        answer = response['message']['content']
+        return KnowledgeResponse(answer=answer)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing query: {str(e)}"
+        )     

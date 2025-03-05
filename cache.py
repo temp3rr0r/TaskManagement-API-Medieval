@@ -1,16 +1,13 @@
 import redis
 import json
-import os
 from models import Task
-
-# Get Redis URL from environment variable or use default
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+from settings import settings
 
 def get_redis_client():
     """Create and return a Redis client"""
-    return redis.from_url(REDIS_URL)
+    return redis.from_url(settings.REDIS_URL)
 
-def set_cache(redis_client, key, value, expiration=3600):
+def set_cache(redis_client, key, value, expiration=None):
     """
     Store a value in Redis cache
     
@@ -18,8 +15,11 @@ def set_cache(redis_client, key, value, expiration=3600):
         redis_client: Redis client instance
         key: Cache key
         value: Value to cache (SQLAlchemy model instance)
-        expiration: Cache expiration time in seconds (default: 1 hour)
+        expiration: Cache expiration time in seconds (default: from settings)
     """
+    if expiration is None:
+        expiration = settings.REDIS_CACHE_EXPIRATION
+
     # Convert SQLAlchemy model to dict
     if hasattr(value, "__dict__"):
         value_dict = {

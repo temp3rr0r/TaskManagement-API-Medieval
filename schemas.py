@@ -29,4 +29,12 @@ class Task(TaskBase):
     updatedAt: float
 
     class Config:
-        orm_mode = True 
+        orm_mode = True
+
+class KnowledgeQuery(BaseModel):
+    """Pydantic model for knowledge base queries"""
+    question: str = Field(..., min_length=1, description="The question to ask the knowledge base")
+
+class KnowledgeResponse(BaseModel):
+    """Pydantic model for knowledge base responses"""
+    answer: str = Field(..., description="The answer from the knowledge base") 
