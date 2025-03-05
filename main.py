@@ -39,6 +39,7 @@ def generate_task_summary(task_description: str) -> str:
         print(f"Error generating task summary: {e}")
         return "Unable to connect to Ollama service. Please try again later."
 
+
 @app.get("/tasks", response_model=List[Task])
 def get_tasks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Retrieve all tasks"""
@@ -124,6 +125,7 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     
     return None
 
+
 @app.get("/tasks/{task_id}/summary", response_model=TaskSummary)
 def get_task_summary(task_id: int, db: Session = Depends(get_db)):
     """Retrieve a specific task by ID with Redis caching. Get a summary of the task."""
@@ -146,40 +148,7 @@ def get_task_summary(task_id: int, db: Session = Depends(get_db)):
     task_summary = TaskSummary(task_information=task_information, task_summary=str_task_summary)
     
     return task_summary
-    
-@app.get("/tasks/{task_id}/knowledge/summary", response_model=TaskSummary)
-def get_knowledge_task_summary(task_id: int, db: Session = Depends(get_db)):
-    """Retrieve a specific task by ID with Redis caching. Get a summary of the task using RAG."""
-    # Try to get task from cache
-    redis_client = get_redis_client()
-    cached_task = get_cache(redis_client, f"task:{task_id}")
-    
-    if cached_task:
-        db_task = cached_task
-    else:    
-        # If not in cache, get from database
-        db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
-        if db_task is None:
-            raise HTTPException(status_code=404, detail="Task not found")
-    
-        
-    # Get summary of the task
-    task_information = f"Task ID: {db_task.id}. Title: {db_task.title}. Description: {db_task.description}. Status: {db_task.status}. Created at {db_task.createdAt} and updated at {db_task.updatedAt}."
-    
-    query = KnowledgeQuery(question=f"Please summarize the following task description in a few sentences: {task_information}")
 
-    try:
-        answer = rag_manager.query_knowledge_base(query.question)
-
-        knowledge_task_summary = TaskSummary(task_information=task_information, task_summary=answer)
-        
-        return knowledge_task_summary
-    
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error processing knowledge query: {str(e)}"
-        ) 
         
 @app.get("/tasks/{task_id}/knowledge/hints", response_model=TaskSummary)
 def get_knowledge_task_hints(task_id: int, db: Session = Depends(get_db)):
@@ -229,7 +198,7 @@ def query(query: KnowledgeQuery):
             messages=[
                 {
                     "role": "system",
-                    "content": settings.SYSTEM_MESSAGES["knowledge_base"]
+                    "content": settings.SYSTEM_MESSAGES["general"]
                 },
                 {
                     "role": "user",
@@ -247,10 +216,11 @@ def query(query: KnowledgeQuery):
         )     
     
 
+
 @app.post("/knowledge/query", response_model=KnowledgeResponse)
 def query_knowledge_base(query: KnowledgeQuery):
     """
-    Query the LLM and the knowledgebase using RAG with the local PDF/EPUB files.
+    Query the LLM and the knowledge base using RAG with the local PDF/EPUB files.
     """
     try:
         answer = rag_manager.query_knowledge_base(query.question)
@@ -259,4 +229,4 @@ def query_knowledge_base(query: KnowledgeQuery):
         raise HTTPException(
             status_code=500,
             detail=f"Error processing knowledge query: {str(e)}"
-        ) 
+        )     

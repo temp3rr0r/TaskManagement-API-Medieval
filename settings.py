@@ -1,6 +1,6 @@
 import os
 from pydantic_settings import BaseSettings
-from typing import Dict
+from typing import Dict, ClassVar
 
 class Settings(BaseSettings):
     # Database settings
@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     REDIS_CACHE_EXPIRATION: int = 3600  # 1 hour in seconds
     
     # Ollama settings
-    OLLAMA_HOST: str = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+    OLLAMA_HOST: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "llama3.2"
     # Data directory for PDF files
     DATA_DIR: str = os.getenv("DATA_DIR", "/app/data")
@@ -21,11 +21,11 @@ class Settings(BaseSettings):
     RAG_CHUNK_SIZE: int = 1200  # Size of text chunks when splitting documents
     RAG_CHUNK_OVERLAP: int = 300  # Overlap between chunks
     
-    # System messages for different contexts
-    SYSTEM_MESSAGES: Dict[str, str] = {
-        "task_summary": "You are a helpful assistant that summarizes task descriptions concisely and professionally.",
-        "knowledge_base": "You are a helpful assistant that provides accurate information based on the knowledge base.",
-        "general": "You are a helpful AI assistant focused on task management."
+    # System messages as a class variable (not a field)
+    SYSTEM_MESSAGES: ClassVar[Dict[str, str]] = {
+        'knowledge_base': 'You are a helpful AI assistant with expertise in historical armour and weapons. Your task is to provide accurate and detailed information based on the provided context. Please be concise but thorough in your responses.',
+        'task_summary': 'You are a helpful AI assistant that summarizes task descriptions concisely and professionally.',
+        'general': 'You are a helpful AI assistant focused on task management.'
     }
     
     # Task status options
