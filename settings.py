@@ -1,6 +1,6 @@
+import os
 from pydantic_settings import BaseSettings
 from typing import Dict
-import os
 
 class Settings(BaseSettings):
     # Database settings
@@ -13,19 +13,18 @@ class Settings(BaseSettings):
     # Ollama settings
     OLLAMA_HOST: str = os.getenv("OLLAMA_HOST", "http://localhost:11434")
     OLLAMA_MODEL: str = "llama3.2"
+    # Data directory for PDF files
+    DATA_DIR: str = os.getenv("DATA_DIR", "/app/data")
     
     # RAG settings
     RAG_NUM_CHUNKS: int = 5  # Number of chunks to retrieve (k)
     RAG_CHUNK_SIZE: int = 1200  # Size of text chunks when splitting documents
     RAG_CHUNK_OVERLAP: int = 300  # Overlap between chunks
-
-    # PDF settings
-    PDF_PATH: str = os.getenv("PDF_PATH", "/app/data/knowledge_base.pdf")
     
     # System messages for different contexts
     SYSTEM_MESSAGES: Dict[str, str] = {
-        "task_summary": "You are a helpful assistant that summarizes tasks concisely.",
-        "knowledge_base": "You are a knowledgeable assistant that provides accurate and relevant information from the knowledge base.",
+        "task_summary": "You are a helpful assistant that summarizes task descriptions concisely and professionally.",
+        "knowledge_base": "You are a helpful assistant that provides accurate information based on the knowledge base.",
         "general": "You are a helpful AI assistant focused on task management."
     }
     

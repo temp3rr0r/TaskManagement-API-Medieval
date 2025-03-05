@@ -1,13 +1,13 @@
 # Task Management API
 
-A RESTful API for managing tasks built with FastAPI, PostgreSQL, and Redis, with RAG capabilities using local PDF knowledge base.
+A RESTful API for managing tasks built with FastAPI, PostgreSQL, and Redis, with RAG capabilities using multiple PDF and EPUB files as knowledge base.
 
 ## Features
 
 - Create, read, update, and delete tasks
 - Task properties include title, description, status, creation time, and update time
 - Redis caching for improved performance
-- RAG (Retrieval Augmented Generation) using local PDF knowledge base
+- RAG (Retrieval Augmented Generation) using multiple PDF and EPUB files as knowledge base
 - Containerized with Docker and Docker Compose
 
 ## API Endpoints
@@ -18,6 +18,7 @@ A RESTful API for managing tasks built with FastAPI, PostgreSQL, and Redis, with
 - `PUT /tasks/{id}` - Update an existing task
 - `DELETE /tasks/{id}` - Delete a task
 - `POST /knowledge/query` - Query the knowledge base using RAG
+- `GET /tasks/{id}/knowledge/summary` - Get AI-generated summary of a task
 
 ## Running the Application
 
@@ -30,15 +31,27 @@ A RESTful API for managing tasks built with FastAPI, PostgreSQL, and Redis, with
 
 1. Clone this repository
 2. Navigate to the project directory
-3. Place your knowledge base PDF file in the `data` directory as `knowledge_base.pdf`
-4. Run the following command to start the application:
+3. Create a `data` directory in the project root if it doesn't exist:
+   ```bash
+   mkdir -p data
+   ```
+4. Place your PDF and/or EPUB files in the `data` directory. The application will automatically load all supported files from this directory.
+5. Run the following command to start the application:
+   ```bash
+   docker-compose up -d
+   ```
+6. The API will be available at http://localhost:8000
+7. Access the API documentation at http://localhost:8000/docs
 
-```bash
-docker-compose up -d
-```
+## Knowledge Base Management
 
-4. The API will be available at http://localhost:8000
-5. Access the API documentation at http://localhost:8000/docs
+The application automatically loads all PDF and EPUB files from the `data` directory into its knowledge base. To update the knowledge base:
+
+1. Add or remove PDF/EPUB files in the `data` directory
+2. Restart the application:
+   ```bash
+   docker-compose restart api
+   ```
 
 ## API Usage Examples
 
@@ -101,4 +114,7 @@ curl -X 'DELETE' 'http://localhost:8000/tasks/1'
 - **Redis**: In-memory data store used for caching
 - **Docker**: Containerization for easy deployment
 - **SQLAlchemy**: SQL toolkit and ORM for database interactions
-- **Pydantic**: Data validation and settings management 
+- **Pydantic**: Data validation and settings management
+- **LangChain**: Framework for building LLM applications
+- **FAISS**: Vector store for efficient similarity search
+- **Ollama**: Local LLM integration 

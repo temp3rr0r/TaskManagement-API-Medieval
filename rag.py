@@ -1,91 +1,104 @@
 import os
-from settings import settings
-from langchain_community.document_loaders import PyPDFLoader
+from typing import List, Optional
+from langchain_community.document_loaders import PyPDFLoader, UnstructuredEPubLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain.chains import RetrievalQA
-from langchain_community.llms import Ollama
-from langchain_core.documents import Document
-
-# Path to the PDF file in the container
-PDF_PATH = settings.PDF_PATH
+from langchain_community.embeddings import OllamaEmbeddings
+import ollama
+from settings import settings
 
 class RAGManager:
     def __init__(self):
         self.vector_store = None
-        self.qa_chain = None
-        self.initialize_rag()
+        self.embeddings = OllamaEmbeddings(
+            model=settings.OLLAMA_MODEL,
+            base_url=settings.OLLAMA_HOST
+        )
+        self.initialize_vector_store()
 
-    def initialize_rag(self):
-        """Initialize the RAG system by loading and processing the PDF"""
-        try:
-            # Load PDF
-            if not os.path.exists(PDF_PATH):
-                print(f"Warning: PDF file not found at {PDF_PATH}")
-                return
-                
-            loader = PyPDFLoader(PDF_PATH)
-            documents = loader.load()
+    def load_documents(self) -> List[str]:
+        """Load documents from PDF and EPUB files in the data directory"""
+        documents = []
+        data_dir = os.path.join(os.getcwd(), "data")
+        
+        if not os.path.exists(data_dir):
+            print(f"Data directory not found at {data_dir}")
+            return documents
 
-            # Split text into chunks
-            text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=settings.RAG_CHUNK_SIZE,
-                chunk_overlap=200,
-                length_function=len
-            )
-            texts = text_splitter.split_documents(documents)
+        for filename in os.listdir(data_dir):
+            file_path = os.path.join(data_dir, filename)
+            try:
+                if filename.lower().endswith('.pdf'):
+                    loader = PyPDFLoader(file_path)
+                    documents.extend(loader.load())
+                    print(f"---------------------------------- Loaded PDF file: {filename}")
+                elif filename.lower().endswith('.epub'):
+                    loader = UnstructuredEPubLoader(file_path)
+                    documents.extend(loader.load())
+                    print(f"---------------------------------- Loaded EPUB file: {filename}")
+            except Exception as e:
+                print(f"Error loading file {filename}: {str(e)}")
 
-            # Create embeddings using Ollama
-            embeddings = OllamaEmbeddings(
-                model=settings.OLLAMA_MODEL,
-                base_url=os.getenv("OLLAMA_HOST", settings.OLLAMA_HOST)
-            )
+        return documents
 
-            # Create vector store
-            if texts:
-                self.vector_store = FAISS.from_documents(texts, embeddings)
+    def initialize_vector_store(self):
+        """Initialize the vector store with document chunks"""
+        documents = self.load_documents()
+        
+        if not documents:
+            print("No documents loaded")
+            return
 
-                # Initialize Ollama LLM
-                llm = Ollama(
-                    model=settings.OLLAMA_MODEL,
-                    base_url=os.getenv("OLLAMA_HOST", settings.OLLAMA_HOST)
-                )
+        # Split documents into chunks
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=settings.RAG_CHUNK_SIZE,
+            chunk_overlap=settings.RAG_CHUNK_OVERLAP,
+            length_function=len,
+        )
+        chunks = text_splitter.split_documents(documents)
 
-                # Create QA chain
-                self.qa_chain = RetrievalQA.from_chain_type(
-                    llm=llm,
-                    chain_type="stuff",
-                    retriever=self.vector_store.as_retriever(
-                        search_kwargs={"k": settings.RAG_NUM_CHUNKS}
-                    )
-                )
-            else:
-                print("Warning: No text chunks were created from the PDF")
+        # Create vector store
+        self.vector_store = FAISS.from_documents(chunks, self.embeddings)
+        print(f"Vector store initialized with {len(chunks)} chunks")
 
-        except Exception as e:
-            print(f"Error initializing RAG: {e}")
-            raise
-
-    def query_knowledge_base(self, query: str) -> str:
+    def query_knowledge_base(self, query: str, k: int = settings.RAG_NUM_CHUNKS) -> str:
         """
-        Query the knowledge base using the provided question
+        Query the knowledge base using RAG
         
         Args:
             query: The question to ask
+            k: Number of relevant chunks to retrieve
             
         Returns:
-            Answer from the RAG system
+            str: The answer generated by the LLM
         """
-        try:
-            if not self.qa_chain:
-                return "RAG system not initialized. Please make sure the PDF file exists and is accessible."
+        if not self.vector_store:
+            return "Knowledge base is not initialized. Please check if there are documents in the data directory."
 
-            result = self.qa_chain.run(query)
-            return result
-        except Exception as e:
-            print(f"Error querying knowledge base: {e}")
-            return f"Error processing query: {str(e)}"
+        # Get relevant documents
+        relevant_chunks = self.vector_store.similarity_search(query, k=k)
+        
+        # Prepare context from relevant chunks
+        context = "\n".join([chunk.page_content for chunk in relevant_chunks])
+        
+        # Generate response using Ollama
+        messages = [
+            {
+                "role": "system",
+                "content": settings.SYSTEM_MESSAGES["knowledge_base"]
+            },
+            {
+                "role": "user",
+                "content": f"Based on the following context, please answer the question: {query}\n\nContext: {context}"
+            }
+        ]
+        
+        response = ollama.chat(
+            model=settings.OLLAMA_MODEL,
+            messages=messages
+        )
+        
+        return response['message']['content']
 
-# Create a global instance
+# Create a singleton instance
 rag_manager = RAGManager() 
