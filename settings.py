@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     
     # Ollama settings
     OLLAMA_HOST: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "llama3.2"
-    OLLAMA_EMBEDDING_MODEL: str = "llama3.2"
+    OLLAMA_MODEL: str = "llama3.2-medieval"
+    OLLAMA_EMBEDDING_MODEL: str = "llama3.2-medieval"
     
     # Knowledge base settings
     DATA_DIR: str = "/app/data"

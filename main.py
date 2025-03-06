@@ -180,7 +180,7 @@ def get_knowledge_task_hints(task_id: int, db: Session = Depends(get_db)):
         
     # Get summary of the task
     
-    query = KnowledgeQuery(question=f"Please provide some hints for the following task description: {task_information}")
+    query = KnowledgeQuery(question=f"Please provide hints for the following task, comprehensively and in detail. {task_information}")
 
     try:
         answer = rag_manager.query_knowledge_base(query.question)

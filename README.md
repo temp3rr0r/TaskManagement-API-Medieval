@@ -26,7 +26,7 @@ A RESTful API for managing tasks built with FastAPI, PostgreSQL, and Redis, with
 ### Prerequisites
 
 - Docker and Docker Compose installed on your system
-- Ollama running locally with llama2 model installed
+- Ollama running locally with llama3.2-medieval model installed
 
 ### Steps to Run
 
