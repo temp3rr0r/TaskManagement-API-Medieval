@@ -42,7 +42,7 @@ class RAGManager:
                     self.documents.extend(loader.load())
                     print(f"------------------------------ Loaded EPUB: {epub_file}")
                 except Exception as e:
-                    print(f"Error loading EPUB {epub_file}: {e}")
+                    print(f"------------------------------ Error loading EPUB {epub_file}: {e}")
             
             # Split the documents into chunks
             if self.documents:
