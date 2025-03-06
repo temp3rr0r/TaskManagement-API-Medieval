@@ -132,19 +132,24 @@ def get_task_summary(task_id: int, db: Session = Depends(get_db)):
     # Try to get task from cache
     redis_client = get_redis_client()
     cached_task = get_cache(redis_client, f"task:{task_id}")
+
+    # TODO: Show all keys from Redis
+    print(f"------------------------------ Redis keys: {redis_client.keys()}")
     
     if cached_task:
         db_task = cached_task
+        task_information = f'Task ID: {db_task["id"]}. Title: {db_task["title"]}. Description: {db_task["description"]}. Status: {db_task["status"]}. Created at {db_task["createdAt"]} and updated at {db_task["updatedAt"]}.'
+        print(f"------------------------------ Task retrieved from Redis: {db_task}")
     else:    
         # If not in cache, get from database
         db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
         if db_task is None:
             raise HTTPException(status_code=404, detail="Task not found")
         
-    # Get summary of the task
-    print(f"------------------------------ Task: {db_task}")
-
-    task_information = f'Task ID: {db_task["id"]}. Title: {db_task["title"]}. Description: {db_task["description"]}. Status: {db_task["status"]}. Created at {db_task["createdAt"]} and updated at {db_task["updatedAt"]}.'
+        print(f"------------------------------ Task retrieved from database: {db_task}")
+        task_information = f'Task ID: {db_task.id}. Title: {db_task.title}. Description: {db_task.description}. Status: {db_task.status}. Created at {db_task.createdAt} and updated at {db_task.updatedAt}.'
+        
+    
     str_task_summary = generate_task_summary(task_description=task_information)
     
     task_summary = TaskSummary(task_information=task_information, task_summary=str_task_summary)
@@ -161,15 +166,19 @@ def get_knowledge_task_hints(task_id: int, db: Session = Depends(get_db)):
     
     if cached_task:
         db_task = cached_task
+        task_information = f'Task ID: {db_task["id"]}. Title: {db_task["title"]}. Description: {db_task["description"]}. Status: {db_task["status"]}. Created at {db_task["createdAt"]} and updated at {db_task["updatedAt"]}.'
+        print(f"------------------------------ Task retrieved from Redis: {db_task}")
     else:    
         # If not in cache, get from database
         db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
         if db_task is None:
             raise HTTPException(status_code=404, detail="Task not found")
+        
+        print(f"------------------------------ Task retrieved from database: {db_task}")
+        task_information = f'Task ID: {db_task.id}. Title: {db_task.title}. Description: {db_task.description}. Status: {db_task.status}. Created at {db_task.createdAt} and updated at {db_task.updatedAt}.'
     
         
     # Get summary of the task
-    task_information = f'Task ID: {db_task["id"]}. Title: {db_task["title"]}. Description: {db_task["description"]}. Status: {db_task["status"]}. Created at {db_task["createdAt"]} and updated at {db_task["updatedAt"]}.'
     
     query = KnowledgeQuery(question=f"Please provide some hints for the following task description: {task_information}")
 
