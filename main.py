@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from database import get_db
 from models import Task as TaskModel
-from schemas import Task, TaskCreate, TaskUpdate, TaskSummary, KnowledgeQuery, KnowledgeResponse
+from schemas import Task, TaskCreate, TaskUpdate, TaskSummary, KnowledgeQuery, KnowledgeResponse, DocumentsResponse, DocumentContent
 from cache import get_redis_client, set_cache, get_cache, invalidate_cache
 import ollama
 from rag import rag_manager
@@ -142,7 +142,9 @@ def get_task_summary(task_id: int, db: Session = Depends(get_db)):
             raise HTTPException(status_code=404, detail="Task not found")
         
     # Get summary of the task
-    task_information = f"Task ID: {db_task.id}. Title: {db_task.title}. Description: {db_task.description}. Status: {db_task.status}. Created at {db_task.createdAt} and updated at {db_task.updatedAt}."
+    print(f"------------------------------ Task: {db_task}")
+
+    task_information = f'Task ID: {db_task["id"]}. Title: {db_task["title"]}. Description: {db_task["description"]}. Status: {db_task["status"]}. Created at {db_task["createdAt"]} and updated at {db_task["updatedAt"]}.'
     str_task_summary = generate_task_summary(task_description=task_information)
     
     task_summary = TaskSummary(task_information=task_information, task_summary=str_task_summary)
@@ -167,7 +169,7 @@ def get_knowledge_task_hints(task_id: int, db: Session = Depends(get_db)):
     
         
     # Get summary of the task
-    task_information = f"Task ID: {db_task.id}. Title: {db_task.title}. Description: {db_task.description}. Status: {db_task.status}. Created at {db_task.createdAt} and updated at {db_task.updatedAt}."
+    task_information = f'Task ID: {db_task["id"]}. Title: {db_task["title"]}. Description: {db_task["description"]}. Status: {db_task["status"]}. Created at {db_task["createdAt"]} and updated at {db_task["updatedAt"]}.'
     
     query = KnowledgeQuery(question=f"Please provide some hints for the following task description: {task_information}")
 
@@ -230,3 +232,34 @@ def query_knowledge_base(query: KnowledgeQuery):
             status_code=500,
             detail=f"Error processing knowledge query: {str(e)}"
         )     
+    
+@app.get("/knowledge/documents", response_model=DocumentsResponse)
+def get_documents():
+    """
+    Retrieve all parsed document contents from the knowledge base.
+    """
+    try:
+
+        documents = rag_manager.get_all_documents()
+
+        # Format the documents into the response schema
+        document_contents = []
+        for doc in documents:
+            document_content = DocumentContent(
+                filename=doc.metadata.get('source', 'Unknown'),
+                content=doc.page_content,
+                metadata=doc.metadata
+            )
+            document_contents.append(document_content)
+        
+        # Create and return the response
+        return DocumentsResponse(
+            documents=document_contents,
+            total_count=len(document_contents)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving document contents: {str(e)}"
+        )
+

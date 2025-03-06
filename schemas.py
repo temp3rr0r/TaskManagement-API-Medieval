@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List, Dict
 
 class TaskBase(BaseModel):
     """Base Pydantic model for Task"""
@@ -37,4 +37,15 @@ class KnowledgeQuery(BaseModel):
 
 class KnowledgeResponse(BaseModel):
     """Pydantic model for knowledge base responses"""
-    answer: str = Field(..., description="The answer from the knowledge base") 
+    answer: str = Field(..., description="The answer from the knowledge base")
+
+class DocumentContent(BaseModel):
+    """Pydantic model for a single document's content"""
+    filename: str = Field(..., description="Name of the document file")
+    content: str = Field(..., description="Content of the document")
+    metadata: Dict = Field(default_factory=dict, description="Metadata associated with the document")
+
+class DocumentsResponse(BaseModel):
+    """Pydantic model for response containing all document contents"""
+    documents: List[DocumentContent] = Field(..., description="List of all parsed documents")
+    total_count: int = Field(..., description="Total number of documents") 

@@ -19,6 +19,7 @@ A RESTful API for managing tasks built with FastAPI, PostgreSQL, and Redis, with
 - `DELETE /tasks/{id}` - Delete a task
 - `POST /knowledge/query` - Query the knowledge base using RAG
 - `GET /tasks/{id}/knowledge/summary` - Get AI-generated summary of a task
+- `GET /knowledge/documents` - View all the contents of parsed PDF and EPUB files
 
 ## Running the Application
 
@@ -54,6 +55,12 @@ The application automatically loads all PDF and EPUB files from the `data` direc
    ```
 
 ## API Usage Examples
+
+### View All Document Contents
+
+```bash
+curl -X 'GET' 'http://localhost:8000/knowledge/documents'
+```
 
 ### Query Knowledge Base
 
