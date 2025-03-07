@@ -12,7 +12,7 @@ langchain-community==0.0.10
 langchain-core==0.1.10
 pypdf==3.17.1
 faiss-cpu==1.7.4
-python-multipart==0.0.6
+python-multipart==0.0.18
 typing-inspect==0.9.0
 typing_extensions==4.8.0
 unstructured>=0.11.0
