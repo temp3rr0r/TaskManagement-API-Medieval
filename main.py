@@ -15,7 +15,7 @@ app = FastAPI(title="Task Management API")
 
 def generate_task_summary(task_description: str) -> str:
     """
-    Generate a summary of a task using Ollama's LLM
+    Generate a summary of a task using Ollama's LLM serving on the LLaMa3.2-medieval model.
     """
     try:
         ollama.host = settings.OLLAMA_HOST
@@ -42,7 +42,7 @@ def generate_task_summary(task_description: str) -> str:
 
 @app.get("/tasks", response_model=List[Task])
 def get_tasks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """Retrieve all tasks"""
+    """Retrieve all tasks."""
     tasks = db.query(TaskModel).offset(skip).limit(limit).all()
     return tasks
 
@@ -61,7 +61,7 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
 
 @app.get("/tasks/{task_id}", response_model=Task)
 def get_task(task_id: int, db: Session = Depends(get_db)):
-    """Retrieve a specific task by ID with Redis caching"""
+    """Retrieve a specific task by ID and set Redis caching."""
     # Try to get task from cache
     redis_client = get_redis_client()
     cached_task = get_cache(redis_client, f"task:{task_id}")
@@ -82,7 +82,7 @@ def get_task(task_id: int, db: Session = Depends(get_db)):
 
 @app.put("/tasks/{task_id}", response_model=Task)
 def update_task(task_id: int, task: TaskUpdate, db: Session = Depends(get_db)):
-    """Update an existing task"""
+    """Update an existing task and invalidate the Redis cache."""
     db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
     if db_task is None:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -111,7 +111,7 @@ def update_task(task_id: int, task: TaskUpdate, db: Session = Depends(get_db)):
 
 @app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(task_id: int, db: Session = Depends(get_db)):
-    """Delete a task"""
+    """Delete a task and invalidate the Redis cache."""
     db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
     if db_task is None:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -128,7 +128,7 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
 
 @app.get("/tasks/{task_id}/summary", response_model=TaskSummary)
 def get_task_summary(task_id: int, db: Session = Depends(get_db)):
-    """Retrieve a specific task by ID with Redis caching. Get a summary of the task."""
+    """Retrieve a specific task by ID with Redis caching. Get a summary of the task using the LLaMa3.2-medieval model."""
     # Try to get task from cache
     redis_client = get_redis_client()
     cached_task = get_cache(redis_client, f"task:{task_id}")
@@ -159,7 +159,7 @@ def get_task_summary(task_id: int, db: Session = Depends(get_db)):
         
 @app.get("/tasks/{task_id}/knowledge/hints", response_model=TaskSummary)
 def get_knowledge_task_hints(task_id: int, db: Session = Depends(get_db)):
-    """Retrieve a specific task by ID with Redis caching. Get a summary of the task using RAG."""
+    """Retrieve a specific task by ID with Redis caching. Get knowledge hints about the task using RAG (PDF/EPUB files) and the LLaMa3.2-medieval model."""
     # Try to get task from cache
     redis_client = get_redis_client()
     cached_task = get_cache(redis_client, f"task:{task_id}")
@@ -180,7 +180,7 @@ def get_knowledge_task_hints(task_id: int, db: Session = Depends(get_db)):
         
     # Get summary of the task
     
-    query = KnowledgeQuery(question=f"Please provide hints for the following task, comprehensively and in detail. {task_information}")
+    query = KnowledgeQuery(question=f"Please summarize the following task description in a full detail: {task_information}")
 
     try:
         answer = rag_manager.query_knowledge_base(query.question)
@@ -199,7 +199,7 @@ def get_knowledge_task_hints(task_id: int, db: Session = Depends(get_db)):
 @app.post("/query", response_model=KnowledgeResponse)
 def query(query: KnowledgeQuery):
     """
-    Query the LLM.
+    Query the medieval fine-tuned LLM with general questions.
     """
     try:
         ollama.host = settings.OLLAMA_HOST
@@ -231,7 +231,7 @@ def query(query: KnowledgeQuery):
 @app.post("/knowledge/query", response_model=KnowledgeResponse)
 def query_knowledge_base(query: KnowledgeQuery):
     """
-    Query the LLM and the knowledge base using RAG with the local PDF/EPUB files.
+    Query the medieval fine-tuned LLM with general questions on: the knowledgebase using RAG with the local PDF/EPUB files.
     """
     try:
         answer = rag_manager.query_knowledge_base(query.question)
