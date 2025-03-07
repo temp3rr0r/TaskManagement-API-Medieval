@@ -9,7 +9,7 @@ pydantic-core>=2.14.5
 ollama==0.3.3
 langchain==0.0.350
 langchain-community==0.0.10
-langchain-core==0.1.10
+langchain-core==0.1.35
 pypdf==3.17.1
 faiss-cpu==1.7.4
 python-multipart==0.0.6
