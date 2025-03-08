@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     SYSTEM_MESSAGES: dict = {
         "general": "You are a helpful AI assistant focused on task management.",
         "task_summary": "You are a task management assistant. Generate a concise summary of the task.",
-        "knowledge_base": "You are a helpful AI assistant with expertise in historical armour and weapons. Your task is to provide accurate and detailed information based on the provided context. Please be concise but thorough in your responses."
+        "knowledge_base": "You are a helpful AI assistant with expertise in historical armour and weapons. Answer using the provided context."
     }
     
     # Task status options

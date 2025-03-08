@@ -74,7 +74,7 @@ class RAGManager:
             
             # Create QA chain
             qa = RetrievalQA.from_chain_type(
-                llm=Ollama(base_url=settings.OLLAMA_HOST, model=settings.OLLAMA_MODEL),
+                llm=Ollama(base_url=settings.OLLAMA_HOST, model=settings.OLLAMA_MODEL, system=settings.SYSTEM_MESSAGES["knowledge_base"]),
                 chain_type="stuff",
                 retriever=retriever,
                 return_source_documents=False

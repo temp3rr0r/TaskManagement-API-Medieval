@@ -72,7 +72,7 @@ curl -X 'POST' \
   'http://localhost:8000/knowledge/query' \
   -H 'Content-Type: application/json' \
   -d '{
-  "question": "What is the best sword type for duelling?"
+  "question": "What is the best sword type for dueling?"
 }'
 ```
 
@@ -83,8 +83,8 @@ curl -X 'POST' \
   'http://localhost:8000/tasks' \
   -H 'Content-Type: application/json' \
   -d '{
-  "title": "Complete project",
-  "description": "Finish the task management API project"
+  "title": "How a houndskull helmet is made?",
+  "description": "Create a detailed description of the process of making a houndskull helmet, including the materials used and the steps involved."
 }'
 ```
 
@@ -97,14 +97,14 @@ curl -X 'GET' 'http://localhost:8000/tasks'
 ### Get a Specific Task
 
 ```bash
-curl -X 'GET' 'http://localhost:8000/tasks/1'
+curl -X 'GET' 'http://localhost:8000/tasks/62'
 ```
 
 ### Update a Task
 
 ```bash
 curl -X 'PUT' \
-  'http://localhost:8000/tasks/1' \
+  'http://localhost:8000/tasks/62' \
   -H 'Content-Type: application/json' \
   -d '{
   "status": "In Progress"
