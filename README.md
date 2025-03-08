@@ -1,24 +1,27 @@
-# Task Management API
+# Task Management API (with LLaMa3.2-medieval SFT)
 
-A RESTful API for managing tasks built with FastAPI, PostgreSQL, and Redis, with RAG capabilities using multiple PDF and EPUB files as knowledge base.
+A RESTful API for managing tasks built with FastAPI, PostgreSQL, and Redis. With RAG capabilities using multiple PDF and EPUB files as knowledge base. To make the assignment a bit more unique, I fine-tuned the LLaMa 3.2-instruct model (see: https://huggingface.co/madks/llama-3.2-3b-medieval-arms-and-armor/tree/main) with a questions-answers knowledgebase (that I created from 8 books, see: https://huggingface.co/datasets/madks/medieval-qa-dataset) on medieval arms and armor (like swords, crossbows, chainmail, ...).
 
 ## Features
 
 - Create, read, update, and delete tasks
 - Task properties include title, description, status, creation time, and update time
 - Redis caching for improved performance
+- Fine-tuned LLaMa 3.2 with knowledge on Medieval arms and armor (from free books acquired from project Gutenberg).
 - RAG (Retrieval Augmented Generation) using multiple PDF and EPUB files as knowledge base
 - Containerized with Docker and Docker Compose
 
 ## API Endpoints
 
-- `POST /tasks` - Create a new task
 - `GET /tasks` - Retrieve all tasks
+- `POST /tasks` - Create a new task
 - `GET /tasks/{id}` - Retrieve a specific task by ID
 - `PUT /tasks/{id}` - Update an existing task
 - `DELETE /tasks/{id}` - Delete a task
-- `POST /knowledge/query` - Query the knowledge base using RAG
-- `GET /tasks/{id}/knowledge/summary` - Get AI-generated summary of a task
+- `GET /tasks/{id}/summary` - Get AI-generated summary of a task
+- `GET /tasks/{id}/knowledge/hints` - Get AI-generated hints for a task
+- `POST /query` - Query the fine-tuned LLaMa 3.2-medieval model
+- `POST /knowledge/query` - Query the fine-tuned LLaMa 3.2-medieval model with the knowledge base (PDF and EPUB files)
 - `GET /knowledge/documents` - View all the contents of parsed PDF and EPUB files
 
 ## Running the Application
@@ -69,7 +72,7 @@ curl -X 'POST' \
   'http://localhost:8000/knowledge/query' \
   -H 'Content-Type: application/json' \
   -d '{
-  "question": "What are the best practices for task management?"
+  "question": "What is the best sword type for duelling?"
 }'
 ```
 
