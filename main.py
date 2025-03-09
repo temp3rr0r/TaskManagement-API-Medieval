@@ -166,7 +166,6 @@ def get_knowledge_task_hints(task_id: int, db: Session = Depends(get_db)):
     
     if cached_task:
         db_task = cached_task
-        # task_information = f'Task ID: {db_task["id"]}. Title: {db_task["title"]}. Description: {db_task["description"]}. Status: {db_task["status"]}. Created at {db_task["createdAt"]} and updated at {db_task["updatedAt"]}.'
         task_information = f'Task Title: {db_task["title"]}. Description: {db_task["description"]}.'
         print(f"------------------------------ Task retrieved from Redis: {db_task}")
     else:    
@@ -176,16 +175,13 @@ def get_knowledge_task_hints(task_id: int, db: Session = Depends(get_db)):
             raise HTTPException(status_code=404, detail="Task not found")
         
         print(f"------------------------------ Task retrieved from database: {db_task}")
-        # task_information = f'Task ID: {db_task.id}. Title: {db_task.title}. Description: {db_task.description}. Status: {db_task.status}. Created at {db_task.createdAt} and updated at {db_task.updatedAt}.'
         task_information = f'Task Title: {db_task.title}. Description: {db_task.description}.'
+   
     
-    
-    # query = KnowledgeQuery(question=f"You are a helpful medieval history expert on arms and armor. You are given a task description: {task_information}. Please provide detailed hints about the task using your internal knowledge along with the knowledge base.")
     query = KnowledgeQuery(question=f"{task_information}. ")
 
     try:
         answer = rag_manager.query_knowledge_base(query.question)
-
         knowledge_task_hints = TaskSummary(task_information=task_information, task_summary=answer)
         
         return knowledge_task_hints
@@ -214,7 +210,7 @@ def query(query: KnowledgeQuery):
                 },
                 {
                     "role": "user",
-                    "content": f"Please answer the following question: {query.question}"
+                    "content": f"Answer the following question: {query.question}"
                 }
             ]
         )

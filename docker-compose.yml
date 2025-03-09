@@ -18,7 +18,7 @@ services:
       - "host.docker.internal:host-gateway"
     command: >
       sh -c "python init_db.py && 
-             uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+             uvicorn main:app --host 0.0.0.0 --port 8000"
 
   db:
     image: postgres:13
