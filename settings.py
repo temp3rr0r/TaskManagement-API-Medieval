@@ -22,10 +22,7 @@ class Settings(BaseSettings):
     RAG_TOP_K_RESULTS: int = 3
     RAG_CHUNK_SIZE: int = 1000
     RAG_CHUNK_OVERLAP: int = 200
-    
-    # Task settings
-    VALID_TASK_STATUSES: list = ["Pending", "In Progress", "Complete"]
-    
+
     # System messages for Ollama
     SYSTEM_MESSAGES: dict = {
         "general": "You are a helpful AI assistant focused on task management.",
@@ -34,7 +31,7 @@ class Settings(BaseSettings):
     }
     
     # Task status options
-    VALID_TASK_STATUSES: list[str] = ["Pending", "In Progress", "Complete"]
+    VALID_TASK_STATUSES: list[str] = ["Pending", "In Progress", "Complete", "Backlog"]
     
     class Config:
         env_file = ".env"

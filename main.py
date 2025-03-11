@@ -52,7 +52,7 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     db_task = TaskModel(
         title=task.title,
         description=task.description,
-        status="Pending"
+        status="Backlog"
     )
     db.add(db_task)
     db.commit()
