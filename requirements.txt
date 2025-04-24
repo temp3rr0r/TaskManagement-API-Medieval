@@ -7,7 +7,7 @@ pydantic>=2.5.2
 pydantic-settings>=2.1.0
 pydantic-core>=2.14.5
 ollama==0.3.3
-langchain==0.0.350
+langchain==0.2.5
 langchain-community==0.0.10
 langchain-core==0.1.10
 pypdf==3.17.1
